@@ -69,12 +69,7 @@
       "alliance": "eng+osd",
       "name": [
         "eng",
-        "chi_sim",
-        "kor",
-        "jpn",
-        "rus",
-        "ara",
-        "tha"
+        "jpn"
       ]
     },
     "psm_mode": 8,
@@ -89,17 +84,6 @@
   "control_list": {
     "whitelist": {
       "alliance": [
-        "Brn",
-        "sTAR",
-        "twr",
-        "UbRg",
-        "Trol",
-        "wxp",
-        "NzC",
-        "krw",
-        "BRN2",
-        "rhw",
-        "SSUP"
       ]
     },
     "blacklist": {

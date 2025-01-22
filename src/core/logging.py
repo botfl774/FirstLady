@@ -8,7 +8,7 @@ from pathlib import Path
 Path("logs").mkdir(exist_ok=True)
 
 # Configure file handler
-file_handler = logging.FileHandler('logs/app.log')
+file_handler = logging.FileHandler('logs/app.log', encoding='utf-8')
 file_handler.setFormatter(logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 ))

@@ -15,9 +15,9 @@ class ConfigManager:
     def _load_configs(self) -> None:
         """Load all configuration files"""
         try:
-            with open(self.config_dir / "config.json") as f:
+            with open(self.config_dir / "config.json", encoding='utf-8') as f:
                 self._config = json.load(f)
-            with open(self.config_dir / "automation.json") as f:
+            with open(self.config_dir / "automation.json", encoding='utf-8') as f:
                 self._automation_config = json.load(f)
         except Exception as e:
             app_logger.error(f"Error loading config: {e}")
