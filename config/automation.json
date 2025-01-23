@@ -1,37 +1,37 @@
 {
-    "time_checks": {
-      "reset": {
-        "handler": "src.automation.routines.reset.ResetRoutine",
-        "interval": 5000
-      },
-      "cleanup": {
-        "handler": "src.automation.routines.cleanup.CleanupRoutine",
-        "interval": 3600
-      },
-      "donate": {
-        "handler": "src.automation.routines.allianceDonate.AllianceDonateRoutine",
-        "interval": 22000
-      },
-      "help": {
-        "handler": "src.automation.routines.help.HelpRoutine",
-        "interval": 5
-      },
-      "secretary": {
-        "handler": "src.automation.routines.secretary.SecretaryRoutine",
-        "interval": 40
-      },
-      "gifts": {
-        "handler": "src.automation.routines.allianceGifts.AllianceGiftsRoutine",
-        "interval": 5000
-      }
+  "time_checks": {
+    "reset": {
+      "handler": "src.automation.routines.reset.ResetRoutine",
+      "interval": 5000
     },
-    "scheduled_events": {
-      "weekly_reset": {
-        "handler": "src.automation.routines.weeklyReset.WeeklyResetRoutine",
-        "schedule": {
-          "day": null,
-          "time": "01:50"
-        }
+    "cleanup": {
+      "handler": "src.automation.routines.cleanup.CleanupRoutine",
+      "interval": 3600
+    },
+    "donate": {
+      "handler": "src.automation.routines.allianceDonate.AllianceDonateRoutine",
+      "interval": 22000
+    },
+    "help": {
+      "handler": "src.automation.routines.help.HelpRoutine",
+      "interval": 5
+    },
+    "secretary": {
+      "handler": "src.automation.routines.secretary.SecretaryRoutine",
+      "interval": 40
+    },
+    "gifts": {
+      "handler": "src.automation.routines.allianceGifts.AllianceGiftsRoutine",
+      "interval": 5000
+    }
+  },
+  "scheduled_events": {
+    "weekly_reset": {
+      "handler": "src.automation.routines.weeklyReset.WeeklyResetRoutine",
+      "schedule": {
+        "day": null,
+        "time": "01:50"
       }
     }
-  } 
+  }
+} 
