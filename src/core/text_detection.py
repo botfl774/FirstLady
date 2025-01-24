@@ -16,7 +16,7 @@ from pathlib import Path
 
 debug = True
 
-# pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
 def get_text_regions(
     accept_location: Tuple[int, int], 

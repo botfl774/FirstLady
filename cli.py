@@ -70,7 +70,7 @@ def run_single_routine(device_id: str, routine_name: str) -> bool:
 
 def main():
     args = parser.parse_args()
-    setup_logging()
+    setup_logging(debug=True)
     
     device_id = get_connected_device()
     if not device_id:

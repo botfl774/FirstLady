@@ -94,7 +94,8 @@ def get_current_running_app(device_id):
             ['adb', '-s', device_id, 'shell', 'dumpsys', 'window', 'windows'],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            encoding='utf8'
         )
         for line in result.stdout.splitlines():
             if 'mCurrentFocus' in line or 'mFocusedApp' in line:
