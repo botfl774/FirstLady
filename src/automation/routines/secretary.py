@@ -317,10 +317,10 @@ class SecretaryRoutine(TimeCheckRoutine):
                     x_diff = app_x - pos_x
                     y_diff = app_y - pos_y
                     # Check if applicant icon is within 100 pixels horizontally and 25 pixels vertically
-                    # if abs(x_diff) <= 100 and abs(y_diff) <= 25:
-                    #     positions_to_process.append(position_type)
-                    #     app_logger.info(f"Found applicant for {position_type} position")
-                    #     break
+                    if abs(x_diff) <= 100 and abs(y_diff) <= 25:
+                        positions_to_process.append(position_type)
+                        app_logger.info(f"Found applicant for {position_type} position")
+                        break
                     positions_to_process.append(position_type)
                     app_logger.info(f"Found applicant for {position_type} position")
             
