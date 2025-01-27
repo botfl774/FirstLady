@@ -98,21 +98,28 @@ def launch_game(device_id: str):
     time.sleep(CONFIG['timings']['app_close_wait'])
     launch_package(device_id, CONFIG['package_name'])
     
-    # Wait for home icon with timeout
-    if not wait_for_image(
-        device_id,
-        "home",
-        timeout=CONFIG['timings']['launch_max_wait']
-    ):
-        app_logger.error("Could not find home icon after launch")
-        return False
+    start_time = time.time()
+    while time.time() - start_time < CONFIG['timings']['launch_max_wait']:
+        # Check for start button first
+        start_loc = find_template(device_id, "start")
+        if start_loc:
+            app_logger.debug("Found start button, clicking it")
+            humanized_tap(device_id, start_loc[0], start_loc[1])
+            human_delay(CONFIG['timings']['menu_animation'])
+        
+        # Check for home icon
+        home_loc = find_template(device_id, "home")
+        if home_loc:
+            app_logger.debug("Found home icon")
+            time.sleep(CONFIG['timings']['launch_wait'])
+            navigate_home(device_id, True)
+            return True
 
-    # Wait for home screen to load
-    app_logger.debug("Waiting for home screen to load")
-    time.sleep(CONFIG['timings']['launch_wait'])
-
-    navigate_home(device_id, True)
-    return True
+        #small delay between checks    
+        human_delay(5)
+    
+    app_logger.error("Could not find home icon after launch")
+    return False
 
 def navigate_home(device_id: str, force: bool = False) -> bool:
     """Navigate to home screen"""

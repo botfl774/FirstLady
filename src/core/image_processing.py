@@ -42,10 +42,15 @@ def find_template(
 ) -> Optional[Tuple[int, int]]:
     """Find template in image and return center coordinates"""
     try:
+        app_logger.debug(f"Looking for template: {template_name}")
+        
         template, template_config = _load_template(template_name)
         if template is None:
+            app_logger.debug(f"Failed to load template: {template_name}")
             return None
             
+        app_logger.debug(f"Template loaded successfully. Shape: {template.shape}")
+        
         # Take screenshot first
         if not take_screenshot(device_id):
             app_logger.error("Failed to take screenshot")
@@ -53,23 +58,40 @@ def find_template(
             
         img = cv2.imread('tmp/screen.png')
         if img is None:
+            app_logger.debug("Failed to load screenshot")
             return None
             
+        app_logger.debug(f"Screenshot loaded successfully. Shape: {img.shape}")
+        
         # Match template
         result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
         
         # Get threshold from template config or use default
         threshold = template_config.get('threshold', CONFIG['match_threshold'])
-            
-        if max_val < threshold:
+        app_logger.debug(f"Match values - Max: {max_val:.4f}, Min: {min_val:.4f}, Threshold: {threshold}")
+        app_logger.debug(f"Match location - Max: {max_loc}, Min: {min_loc}")
+        
+        # Fix the threshold comparison
+        if max_val < threshold:  # Remove the incorrect "threshold - -0.16"
+            app_logger.debug(f"Match value {max_val:.4f} below threshold {threshold}")
             return None
             
-        # Get template dimensions and calculate center point
+        app_logger.debug(f"Match value {max_val:.4f} EXCEEDS threshold {threshold} !")
+        
+        # Save debug image
+        debug_img = img.copy()
         h, w = template.shape[:2]
+        cv2.rectangle(debug_img, max_loc, (max_loc[0] + w, max_loc[1] + h), (0, 255, 0), 2)
+        cv2.putText(debug_img, f"{max_val:.3f}", (max_loc[0], max_loc[1] - 5),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        cv2.imwrite(f'tmp/debug_find_{template_name}.png', debug_img)
+        
+        # Get template dimensions and calculate center point
         center_x = max_loc[0] + w//2
         center_y = max_loc[1] + h//2
         
+        app_logger.debug(f"Found match at center point: ({center_x}, {center_y})")
         return (center_x, center_y)
         
     except Exception as e:

@@ -21,7 +21,7 @@ class AllianceGiftsRoutine(TimeCheckRoutine):
             "alliance",
             error_msg="Could not find alliance icon"
         ):
-            return True
+            return False
             
         # Click alliance tech icon
         if not find_and_tap_template(
@@ -29,7 +29,7 @@ class AllianceGiftsRoutine(TimeCheckRoutine):
             "alliance_gifts",
             error_msg="Could not find alliance_gifts icon"
         ):
-            return True
+            return False
             
         # Click collect all button
         if find_and_tap_template(

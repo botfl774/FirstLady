@@ -18,12 +18,18 @@ def get_routine_config():
     try:
         with open("config/automation.json") as f:
             config = json.load(f)
-            return config.get("time_checks", {})
+            # Filter out routines with null intervals
+            time_checks = {
+                name: data 
+                for name, data in config.get("time_checks", {}).items()
+                if data.get("interval") is not None
+            }
+            return time_checks
     except Exception:
         return {}
 
 parser = argparse.ArgumentParser(description='Game automation CLI')
-parser.add_argument('command', choices=['auto', 'routine'], help='Automation command to run')
+parser.add_argument('command', choices=['auto', 'routine', 'reset'], help='Automation command to run')
 parser.add_argument('routine_name', nargs='?', choices=list(get_routine_config().keys()), help='Name of routine to run')
 parser.add_argument('--debug', action='store_true', help='Enable debug logging')
 parser.add_argument('--no-cleanup', action='store_true', help='Skip cleanup on exit')
@@ -49,7 +55,7 @@ def run_single_routine(device_id: str, routine_name: str) -> bool:
             return False
             
         # Create automation instance
-        automation = MainAutomation(device_id)
+        automation = MainAutomation(device_id, debug=True)
         
         handler_factory = HandlerFactory()
         handler = handler_factory.create_handler(
@@ -70,7 +76,7 @@ def run_single_routine(device_id: str, routine_name: str) -> bool:
 
 def main():
     args = parser.parse_args()
-    setup_logging(debug=True)
+    setup_logging()
     
     device_id = get_connected_device()
     if not device_id:
@@ -97,9 +103,16 @@ def main():
             return 0 if success else 1
             
         elif args.command == 'auto':
-            automation = MainAutomation(device_id)
+            automation = MainAutomation(device_id, debug=args.debug)
             success = automation.run()
             return 0 if success else 1
+            
+        elif args.command == 'reset':
+            automation = MainAutomation(device_id, debug=args.debug)
+            success = automation.force_reset()
+            if not success:
+                app_logger.error("Failed to reset game")
+                sys.exit(1)
             
     except Exception as e:
         app_logger.error(f"Error in main: {e}")

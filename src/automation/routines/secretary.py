@@ -22,8 +22,7 @@ class SecretaryRoutine(TimeCheckRoutine):
 
     def __init__(self, device_id: str, interval: int, last_run: float = None, automation=None):
         super().__init__(device_id, interval, last_run, automation)
-        # self.secretary_types = ["strategy", "security", "development", "science", "interior"]
-        self.secretary_types = ["interior", "development", "science", "strategy", "security"]
+        self.secretary_types = ["strategy", "security", "development", "science", "interior"]
         self.capture = None
         self.manual_deny = False
 
@@ -317,12 +316,10 @@ class SecretaryRoutine(TimeCheckRoutine):
                     x_diff = app_x - pos_x
                     y_diff = app_y - pos_y
                     # Check if applicant icon is within 100 pixels horizontally and 25 pixels vertically
-                    if abs(x_diff) <= 100 and abs(y_diff) <= 25:
+                    if abs(x_diff) <= 100 and abs(y_diff) <= 28:
                         positions_to_process.append(position_type)
                         app_logger.info(f"Found applicant for {position_type} position")
                         break
-                    positions_to_process.append(position_type)
-                    app_logger.info(f"Found applicant for {position_type} position")
             
             return positions_to_process
             

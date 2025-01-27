@@ -5,17 +5,29 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from src.automation.routines.routineBase import RoutineBase
 from src.core.config import CONFIG
-from src.core.logging import app_logger
+from src.core.logging import app_logger, setup_logging
 from src.core.scheduling import update_interval_check, update_schedule
 from src.core.adb import get_current_running_app
 from src.core.device import cleanup_temp_files, cleanup_device_screenshots
 from src.automation.state import AutomationState
 from src.automation.handler_factory import HandlerFactory
 from src.game.controls import launch_game, navigate_home
+import os
+import asyncio
 
 class MainAutomation:
-    def __init__(self, device_id: str):
+    def __init__(self, device_id: str, debug: bool = False):
+        """Initialize automation
+        
+        Args:
+            device_id: Device identifier
+            debug: Enable debug logging if True
+        """
+        setup_logging(debug=debug)  # Set logging level based on debug flag
         self.device_id = device_id
+        app_logger.info(f"Initializing automation for device: {device_id}")
+        if debug:
+            app_logger.info("Debug mode enabled")
         self.state = AutomationState()
         config = self.load_automation_config()
         self.time_checks = self.initialize_time_checks(config.get('time_checks', {}))
@@ -68,12 +80,16 @@ class MainAutomation:
         
         # Use config order, not state order
         for check_name, check_data in config.items():
+            # Skip if interval is null
+            if check_data.get("interval") is None:
+                continue
+            
             last_run = self.state.get_last_run(check_name, "time_checks")
             checks[check_name] = {
                 "last_run": last_run,
                 "time_to_check": check_data["interval"],
                 "handler": check_data["handler"],
-                "needs_check": True  # Force initial check
+                "needs_check": True
             }
         return checks
 
@@ -81,6 +97,10 @@ class MainAutomation:
         """Initialize scheduled events from config and saved state"""
         events = {}
         for event_name, event_data in config.items():
+            # Skip if day is null
+            if event_data["schedule"]["day"] is None:
+                continue
+            
             events[event_name] = {
                 "last_run": self.state.get_last_run(event_name, "scheduled_events"),
                 "day": event_data["schedule"]["day"],
@@ -116,11 +136,10 @@ class MainAutomation:
         app_logger.warning(f"Navigation failure #{consecutive_failures}, sleeping for {sleep_time} seconds")
         time.sleep(sleep_time)
         
-        # Force game restart
+        # Force game restart using internal reset
         app_logger.info("Forcing game restart...")
-        handler = self.get_handler("src.automation.routines.reset.ResetRoutine", {"interval": 0})
-        if handler:
-            handler.start()
+        if not self.reset_game():
+            app_logger.error("Failed to reset game")
 
     def start(self) -> bool:
         """Main automation loop with improved error handling"""
@@ -239,8 +258,10 @@ class MainAutomation:
         try:
             retry_count = 0
             base_sleep = CONFIG['timings']['home_check_interval']
+            last_notification_time = 0
+            notification_interval = 3600  # 1 hour in seconds
             
-            while retry_count < CONFIG['max_home_attempts']:
+            while True:
                 # Check if game is running first
                 current_app = get_current_running_app(self.device_id)
                 if current_app == CONFIG['package_name']:
@@ -251,16 +272,37 @@ class MainAutomation:
                 retry_count += 1
                 sleep_time = min(base_sleep * (2 ** retry_count), 600)  # Cap at 10 minutes
                 
+                # Only notify if we hit the 10-minute cap and haven't notified in the last hour
+                current_time = time.time()
+                if (sleep_time >= 600 and 
+                    current_time - last_notification_time > notification_interval):
+                    webhook_url = os.getenv('AUTOMATION_WEBHOOK_URL')
+                    if webhook_url:  # Only attempt notification if webhook is configured
+                        try:
+                            from src.core.discord import DiscordNotifier
+                            discord = DiscordNotifier()
+                            discord.webhook_url = webhook_url
+                            asyncio.run(discord.send_notification(
+                                "🔄 **Game Launch Failed**",
+                                f"Unable to launch game, retrying every 10 minutes.\nRetry count: {retry_count}"
+                            ))
+                            last_notification_time = current_time
+                        except Exception as e:
+                            app_logger.error(f"Failed to send Discord notification: {e}")
+                
                 app_logger.debug(f"Navigation failed, waiting {sleep_time}s before retry {retry_count}")
                 time.sleep(sleep_time)
                 launch_game(self.device_id)
                 
-            app_logger.error("Failed to verify game is running after maximum attempts")
-            return False
+                # Reset retry count after it hits max to prevent sleep time from growing indefinitely
+                if retry_count >= CONFIG['max_home_attempts']:
+                    retry_count = 0
+                    app_logger.warning("Hit maximum attempts, resetting retry counter")
             
         except Exception as e:
             app_logger.error(f"Error verifying game status: {e}")
-            return False
+            time.sleep(600)  # Sleep for 10 minutes on error
+            return False  # This will trigger another retry through the main loop
 
     def needs_check(self, check_name: str) -> bool:
         """Check if a scheduled task needs to be run
@@ -272,3 +314,31 @@ class MainAutomation:
             True if check exists and needs to be run, False otherwise
         """
         return check_name in self.time_checks and self.time_checks[check_name] and self.time_checks[check_name]['needs_check']
+
+    def reset_game(self) -> bool:
+        """Reset game state by restarting the app"""
+        app_logger.info("Resetting game state...")
+        retry_count = 0
+        base_sleep = CONFIG['timings']['launch_wait']
+        
+        while retry_count < CONFIG['max_home_attempts']:
+            # Use exponential backoff with cap
+            sleep_time = min(base_sleep * (2 ** retry_count), 600)
+            app_logger.info(f"Launching game in {sleep_time} seconds")
+            time.sleep(sleep_time)
+            
+            if launch_game(self.device_id):
+                app_logger.info("Game launched successfully")
+                if navigate_home(self.device_id, force=True):
+                    self.game_state["is_home"] = True
+                    return True
+                
+            retry_count += 1
+        
+        app_logger.error("Failed to reset game after maximum attempts")
+        return False
+
+    def force_reset(self) -> bool:
+        """Force a game reset regardless of state"""
+        app_logger.info("Forcing game reset...")
+        return self.reset_game()

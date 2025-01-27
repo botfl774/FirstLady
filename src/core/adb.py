@@ -95,7 +95,7 @@ def get_current_running_app(device_id):
             capture_output=True,
             text=True,
             check=True,
-            encoding='utf8'
+            encoding='utf-8'
         )
         for line in result.stdout.splitlines():
             if 'mCurrentFocus' in line or 'mFocusedApp' in line:

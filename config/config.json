@@ -68,8 +68,7 @@
     "languages": {
       "alliance": "eng+osd",
       "name": [
-        "eng",
-        "jpn"
+        "eng"
       ]
     },
     "psm_mode": 8,
@@ -83,7 +82,8 @@
   },
   "control_list": {
     "whitelist": {
-      "alliance": []
+      "alliance": [
+      ]
     },
     "blacklist": {
       "alliance": []
@@ -117,6 +117,10 @@
     "home": {
       "path": "templates/jp/ui/home.png",
       "threshold": 0.8
+    },
+    "start": {
+      "path": "templates/jp/ui/start.png",
+      "threshold": 0.75
     },
     "alliance": {
       "path": "templates/jp/alliance/alliance.png",
