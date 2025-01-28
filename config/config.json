@@ -9,6 +9,7 @@
   "donate_alliance_interval": null,
   "screenshot_quality": 100,
   "match_threshold": 0.8,
+  "max_accept_count": 2,
   "ui_elements": {
     "profile": {
       "x": "5%",

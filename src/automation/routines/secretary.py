@@ -149,7 +149,7 @@ class SecretaryRoutine(TimeCheckRoutine):
     
     def process_secretary_position(self, name: str) -> bool:
         """Process a single secretary position"""
-        try:        
+        try:
             # Find and click secretary position
             if not find_and_tap_template(
                 self.device_id,
@@ -181,8 +181,9 @@ class SecretaryRoutine(TimeCheckRoutine):
                 
                 processed = 0
                 accepted = 0
-                
-                while processed < 5:  # Max 8 applicants
+
+                max_accept_count = CONFIG["max_accept_count"]
+                while processed < max_accept_count:  # Max 8 applicants
                     if not take_screenshot(self.device_id):
                         break
                         
