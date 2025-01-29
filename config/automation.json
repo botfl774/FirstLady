@@ -20,6 +20,14 @@
         "handler": "src.automation.routines.secretary.SecretaryRoutine",
         "interval": 40
       },
+      "removeSecretary": {
+        "handler": "src.automation.routines.secretaryRemove.SecretaryRemoveRoutine",
+        "interval": null
+      },
+      "testRoutine": {
+        "handler": "src.automation.routines.testRoutine.testRoutine",
+        "interval": null
+      },
       "mapExchange": {
         "handler": "src.automation.routines.mapExchange.MapExchangeRoutine",
         "interval": null

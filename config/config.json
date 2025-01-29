@@ -10,6 +10,7 @@
   "screenshot_quality": 100,
   "match_threshold": 0.8,
   "max_accept_count": 2,
+  "thres_hold_minutes": 6,
   "ui_elements": {
     "profile": {
       "x": "5%",
@@ -36,6 +37,14 @@
       "start_y": "30%",
       "end_x": "50%",
       "end_y": "80%"
+    },
+    "secretary_dismiss_button": {
+      "x": "27%",
+      "y": "86%"
+    },
+    "secretary_confirm_button": {
+      "x": "60%",
+      "y": "50%"
     }
   },
   "timings": {
@@ -83,8 +92,7 @@
   },
   "control_list": {
     "whitelist": {
-      "alliance": [
-      ]
+      "alliance": []
     },
     "blacklist": {
       "alliance": []
@@ -143,9 +151,17 @@
       "path": "templates/jp/secretary/president.png",
       "threshold": 0.4
     },
+    "firstlady": {
+      "path": "templates/jp/secretary/firstlady.png",
+      "threshold": 0.65
+    },
     "list": {
       "path": "templates/jp/ui/list.png",
       "threshold": 0.6
+    },
+    "clock": {
+      "path": "templates/jp/secretary/clock.png",
+      "threshold": 0.65
     },
     "strategy": {
       "path": "templates/jp/secretary/strategy.png",
