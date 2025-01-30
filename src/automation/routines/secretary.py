@@ -211,6 +211,7 @@ class SecretaryRoutine(TimeCheckRoutine):
                         languages='eng', 
                         img=screenshot
                     )
+                    app_logger.info(f"##### accept alliance:{alliance_text},{original_text}")
                     
                     if len(CONTROL_LIST['whitelist']['alliance']) > 0:
                         if alliance_text in CONTROL_LIST['whitelist']['alliance']:
