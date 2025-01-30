@@ -10,7 +10,7 @@
       },
       "help": {
         "handler": "src.automation.routines.help.HelpRoutine",
-        "interval": null
+        "interval": 300
       },
       "dig": {
         "handler": "src.automation.routines.checkForDigs.CheckForDigsRoutine",
@@ -18,11 +18,11 @@
       },
       "secretary": {
         "handler": "src.automation.routines.secretary.SecretaryRoutine",
-        "interval": 120
+        "interval": 180
       },
       "removeSecretary": {
         "handler": "src.automation.routines.secretaryRemove.SecretaryRemoveRoutine",
-        "interval": 180
+        "interval": 300
       },
       "testRoutine": {
         "handler": "src.automation.routines.testRoutine.testRoutine",

@@ -85,10 +85,11 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                             "position":(pos_loc)
                         }
             gap_to_time_x = 15
-            gap_to_time_y = (-9)
+            gap_to_time_y = (-10)
             time_width = 78
-            time_height = 19
+            time_height = 20
             for name, entry in positions_to_process.items():
+                text = ""
                 x1 = entry['clock'][0] + gap_to_time_x
                 y1 = entry['clock'][1] + gap_to_time_y
                 width = time_width
@@ -96,16 +97,24 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                 x2 = x1 + width
                 y2 = y1 + height
                 cloppedImage = screenshot[y1 : y2, x1 : x2] # y, x
+
                 cv2.rectangle(
                     screenshot, (x1, y1), (x2, y2), (0, 255, 0), 2
                 )
                 gray = cv2.cvtColor(np.array(cloppedImage), cv2.COLOR_BGR2GRAY)
+                # Higher scale factor for better detail
+                scale = 8
+                enlarged = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+                # Simple binary threshold
+                # _, binary = cv2.threshold(enlarged, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+                _save_debug_image(enlarged, f"{name}_clopped_time")
                 config = (
                     '--psm 6 '
                     '--oem 3 '
-                    f'-c tessedit_char_whitelist=:1234567890'
+                    f'-c tessedit_char_whitelist=:0123456789'
                 )
-                text = pytesseract.image_to_string(gray, lang='eng', config=config).strip()
+                text = pytesseract.image_to_string(enlarged, lang='eng', config=config).strip()
                 original_text = text
                 text = text_sanitization(text)
                 app_logger.info(f"### {name} original_text:{original_text} clean_up_text:{text}.")
@@ -130,7 +139,7 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                         dismiss = CONFIG['ui_elements']['secretary_dismiss_button']
                         dismiss_x = int(width * float(dismiss['x'].strip('%')) / 100)
                         dismiss_y = int(height * float(dismiss['y'].strip('%')) / 100)
-                        app_logger.debug(f"[解任]ボタンをタップ.({dismiss_x},{dismiss_y})")
+                        app_logger.info(f"{name} [解任]ボタンをタップ.({dismiss_x},{dismiss_y})")
                         humanized_tap(
                             self.device_id,
                             dismiss_x,
@@ -141,7 +150,7 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                         confirm = CONFIG['ui_elements']['secretary_confirm_button']
                         confirm_x = int(width * float(confirm['x'].strip('%')) / 100)
                         confirm_y = int(height * float(confirm['y'].strip('%')) / 100)
-                        app_logger.debug(f"[確認]ボタンをタップ.({confirm_x},{confirm_y})")
+                        app_logger.info(f"{name} [確認]ボタンをタップ.({confirm_x},{confirm_y})")
                         humanized_tap(
                             self.device_id,
                             confirm_x,
@@ -150,11 +159,11 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                         human_delay(CONFIG['timings']['menu_animation'])
 
                         press_back(self.device_id)
-                        human_delay(CONFIG['timings']['menu_animation'])
-            _save_debug_image(screenshot, "time")
+            _save_debug_image(screenshot, f"{name}_time")
             # cv2.imshow('temp', screenshot)
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
+            return True
         except Exception as e:
             app_logger.error(f"Error opening find_remove_secretary: {e}")
             return False
