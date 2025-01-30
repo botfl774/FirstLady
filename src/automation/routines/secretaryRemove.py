@@ -15,7 +15,10 @@ from src.core.text_detection import (
     extract_text_from_region, 
     get_text_regions, 
     log_rejected_alliance,
-    CONTROL_LIST
+    CONTROL_LIST,
+)
+from src.core.image_processing import (
+    _save_debug_image
 )
 from src.core.audio import play_beep
 import numpy as np
@@ -65,36 +68,47 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                 app_logger.debug(f"Topmost button at coordinates: ({sorted_matches[0][0]}, {sorted_matches[0][1]})")
             screenshot = cv2.imread('tmp/screen.png')
             positions_to_process = {}
+            gap_x = 50
+            gap_y = 140
             for clock in sorted_matches:
                 diff = (abs(clock[0] - firstlady[0][0]), abs(clock[1] - firstlady[0][1]))
-                if diff[0] <= 50 and diff[1] <= 140:
+                if diff[0] <= gap_x and diff[1] <= gap_y:
                     # 副大統領をスキップ
                     continue
                 for position_type, pos_loc in all_positions.items():
                     pos_x, pos_y = pos_loc
                     x_diff = pos_x - clock[0]
                     y_diff = pos_y - clock[1]
-                    if abs(x_diff) <= 50 and abs(y_diff) <= 140:
+                    if abs(x_diff) <= gap_x and abs(y_diff) <= gap_y:
                         positions_to_process[position_type] = {
                             "clock":(clock[0], clock[1]),
                             "position":(pos_loc)
                         }
+            gap_to_time_x = 15
+            gap_to_time_y = (-9)
+            time_width = 78
+            time_height = 19
             for name, entry in positions_to_process.items():
-                x1 = entry['clock'][0] + 16
-                y1 = entry['clock'][1] - 10
-                width = 76
-                height = 20
+                x1 = entry['clock'][0] + gap_to_time_x
+                y1 = entry['clock'][1] + gap_to_time_y
+                width = time_width
+                height = time_height
                 x2 = x1 + width
                 y2 = y1 + height
                 cloppedImage = screenshot[y1 : y2, x1 : x2] # y, x
                 cv2.rectangle(
                     screenshot, (x1, y1), (x2, y2), (0, 255, 0), 2
                 )
-                screenshot_rgb = cv2.cvtColor(np.array(cloppedImage), cv2.COLOR_BGR2GRAY)
-                # Define OCR configuration options
-                custom_config = r'--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789:'
-                # Extract text with custom configuration
-                text = text_sanitization(pytesseract.image_to_string(screenshot_rgb, config=custom_config))
+                gray = cv2.cvtColor(np.array(cloppedImage), cv2.COLOR_BGR2GRAY)
+                config = (
+                    '--psm 6 '
+                    '--oem 3 '
+                    f'-c tessedit_char_whitelist=:1234567890'
+                )
+                text = pytesseract.image_to_string(gray, lang='eng', config=config).strip()
+                original_text = text
+                text = text_sanitization(text)
+                app_logger.info(f"### {name} original_text:{original_text} clean_up_text:{text}.")
                 # Use regular expression to find time strings in HH:mm:ss format
                 pattern = r'\b\d{2}:\d{2}:\d{2}\b'
                 matches = re.findall(pattern, text)
@@ -112,29 +126,32 @@ class SecretaryRemoveRoutine(TimeCheckRoutine):
                         app_logger.info(f"{name}を解任します [就任時間：{text.strip()}] 就任期間:{total_minutes}分.")
                         humanized_tap(self.device_id, entry['position'][0], entry['position'][1])
                         human_delay(CONFIG['timings']['menu_animation'])
-                        app_logger.debug(f"[解任]ボタンをタップ.")
                         width, height = get_screen_size(self.device_id)
                         dismiss = CONFIG['ui_elements']['secretary_dismiss_button']
                         dismiss_x = int(width * float(dismiss['x'].strip('%')) / 100)
                         dismiss_y = int(height * float(dismiss['y'].strip('%')) / 100)
+                        app_logger.debug(f"[解任]ボタンをタップ.({dismiss_x},{dismiss_y})")
                         humanized_tap(
                             self.device_id,
                             dismiss_x,
                             dismiss_y
                         )
                         human_delay(CONFIG['timings']['menu_animation'])
-                        app_logger.debug(f"[確認]ボタンをタップ.")
+
                         confirm = CONFIG['ui_elements']['secretary_confirm_button']
                         confirm_x = int(width * float(confirm['x'].strip('%')) / 100)
                         confirm_y = int(height * float(confirm['y'].strip('%')) / 100)
+                        app_logger.debug(f"[確認]ボタンをタップ.({confirm_x},{confirm_y})")
                         humanized_tap(
                             self.device_id,
                             confirm_x,
                             confirm_y
                         )
                         human_delay(CONFIG['timings']['menu_animation'])
+
                         press_back(self.device_id)
                         human_delay(CONFIG['timings']['menu_animation'])
+            _save_debug_image(screenshot, "time")
             # cv2.imshow('temp', screenshot)
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()

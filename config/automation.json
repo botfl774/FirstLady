@@ -18,11 +18,11 @@
       },
       "secretary": {
         "handler": "src.automation.routines.secretary.SecretaryRoutine",
-        "interval": 40
+        "interval": 120
       },
       "removeSecretary": {
         "handler": "src.automation.routines.secretaryRemove.SecretaryRemoveRoutine",
-        "interval": null
+        "interval": 180
       },
       "testRoutine": {
         "handler": "src.automation.routines.testRoutine.testRoutine",

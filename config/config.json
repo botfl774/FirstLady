@@ -39,12 +39,12 @@
       "end_y": "80%"
     },
     "secretary_dismiss_button": {
-      "x": "27%",
-      "y": "86%"
+      "x": "26.666%",
+      "y": "85.625%"
     },
     "secretary_confirm_button": {
-      "x": "60%",
-      "y": "50%"
+      "x": "59.629%",
+      "y": "63.75%"
     }
   },
   "timings": {

@@ -192,7 +192,7 @@ def extract_text_from_region(device_id: str, region: Tuple[int, int, int, int], 
         config = (
             '--psm 7 '  # Single line mode
             '--oem 1 '  # LSTM only
-            f'-c tessedit_char_whitelist={ALLIANCE_CHARS}[] '
+            f'-c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890[] '
             '-c tessedit_write_images=1 '
             '-c textord_min_linesize=2 '
             '-c edges_max_children_per_outline=40'
