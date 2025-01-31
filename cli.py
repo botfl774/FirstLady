@@ -33,6 +33,7 @@ parser.add_argument('command', choices=['auto', 'routine', 'reset'], help='Autom
 parser.add_argument('routine_name', nargs='?', choices=list(get_routine_config().keys()), help='Name of routine to run')
 parser.add_argument('--debug', action='store_true', help='Enable debug logging')
 parser.add_argument('--no-cleanup', action='store_true', help='Skip cleanup on exit')
+parser.add_argument('--device')
 
 cleanup_manager = CleanupManager()
 
@@ -77,8 +78,7 @@ def run_single_routine(device_id: str, routine_name: str) -> bool:
 def main():
     args = parser.parse_args()
     setup_logging()
-    
-    device_id = get_connected_device()
+    device_id = get_connected_device(args.device)
     if not device_id:
         app_logger.error("No devices found. Please check:")
         app_logger.error("1. Device is connected via USB")
