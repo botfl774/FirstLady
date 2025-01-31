@@ -101,11 +101,11 @@ def launch_game(device_id: str):
     start_time = time.time()
     while time.time() - start_time < CONFIG['timings']['launch_max_wait']:
         # Check for start button first
-        start_loc = find_template(device_id, "start")
-        if start_loc:
-            app_logger.debug("Found start button, clicking it")
-            humanized_tap(device_id, start_loc[0], start_loc[1])
-            human_delay(CONFIG['timings']['menu_animation'])
+        # start_loc = find_template(device_id, "start")
+        # if start_loc:
+        #     app_logger.debug("Found start button, clicking it")
+        #     humanized_tap(device_id, start_loc[0], start_loc[1])
+        #     human_delay(CONFIG['timings']['menu_animation'])
         
         # Check for home icon
         home_loc = find_template(device_id, "home")

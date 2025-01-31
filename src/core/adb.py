@@ -75,15 +75,23 @@ def swipe_screen(device_id: str, start_x: int, start_y: int, end_x: int, end_y: 
         app_logger.error(f"Error swiping screen: {e}")
         return False
 
-def get_connected_device() -> Optional[str]:
+def get_connected_device(device:str) -> Optional[str]:
     """Get the first connected device ID"""
     devices = get_device_list()
     if not devices:
         app_logger.error("No devices connected")
         return None
-    if len(devices) > 1:
-        app_logger.warning(f"Multiple devices found, using first one: {devices[0]}")
-    return devices[0]
+    targetDevice = None
+    if device:
+        for dev in devices:
+            if dev == device:
+                targetDevice = dev
+                break
+    if not targetDevice:
+        targetDevice = devices[0]
+        if len(devices) > 1:
+            app_logger.warning(f"Multiple devices found, using first one: {devices[0]}")
+    return targetDevice
 
 def get_current_running_app(device_id):
     """
