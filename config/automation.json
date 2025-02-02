@@ -22,7 +22,7 @@
       },
       "removeSecretary": {
         "handler": "src.automation.routines.secretaryRemove.SecretaryRemoveRoutine",
-        "interval": 300
+        "interval": null
       },
       "testRoutine": {
         "handler": "src.automation.routines.testRoutine.testRoutine",

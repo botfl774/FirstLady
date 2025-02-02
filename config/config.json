@@ -163,6 +163,14 @@
       "path": "templates/jp/secretary/clock.png",
       "threshold": 0.65
     },
+    "military": {
+      "path": "templates/jp/secretary/military.png",
+      "threshold": 0.8
+    },
+    "administrative": {
+      "path": "templates/jp/secretary/administrative.png",
+      "threshold": 0.8
+    },
     "strategy": {
       "path": "templates/jp/secretary/strategy.png",
       "threshold": 0.8

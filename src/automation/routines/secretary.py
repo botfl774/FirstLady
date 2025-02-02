@@ -16,13 +16,14 @@ from src.core.text_detection import (
 )
 from src.core.audio import play_beep
 import numpy as np
+import random
 
 class SecretaryRoutine(TimeCheckRoutine):
     force_home: bool = True
 
     def __init__(self, device_id: str, interval: int, last_run: float = None, automation=None):
         super().__init__(device_id, interval, last_run, automation)
-        self.secretary_types = ["strategy", "security", "development", "science", "interior"]
+        self.secretary_types = ["strategy", "security", "development", "science", "interior", "administrative", "military"]
         self.capture = None
         self.manual_deny = False
 
@@ -162,81 +163,88 @@ class SecretaryRoutine(TimeCheckRoutine):
             human_delay(CONFIG['timings']['tap_delay'])
             
             # Find and click list button
-            if not find_and_tap_template(
+            if find_and_tap_template(
                 self.device_id,
                 "list",
-                error_msg="List button not found",
-                critical=True,
+                error_msg=f"{name} List button not found",
+                critical=False,
                 timeout=CONFIG['timings']['list_timeout']
             ):
-                return False
+                accept_locations = self.find_accept_buttons()
+                if accept_locations:
+                    # Scroll to top if needed
+                    if len(accept_locations) > 5:
+                        handle_swipes(self.device_id, direction="up")
+                        human_delay(CONFIG['timings']['settle_time'] * 2)
+                        accept_locations = self.find_accept_buttons()
+                    
+                    processed = 0
+                    accepted = 0
 
-            accept_locations = self.find_accept_buttons()
-            if accept_locations:
-                # Scroll to top if needed
-                if len(accept_locations) > 5:
-                    handle_swipes(self.device_id, direction="up")
-                    human_delay(CONFIG['timings']['settle_time'] * 2)
-                    accept_locations = self.find_accept_buttons()
-                
-                processed = 0
-                accepted = 0
-
-                max_accept_count = CONFIG["max_accept_count"]
-                while processed < max_accept_count:  # Max 8 applicants
-                    if not take_screenshot(self.device_id):
-                        break
+                    max_accept_count = CONFIG["max_accept_count"]
+                    while processed < max_accept_count:  # Max 8 applicants
+                        if not take_screenshot(self.device_id):
+                            break
+                            
+                        current_screenshot = cv2.imread('tmp/screen.png')
+                        if current_screenshot is None:
+                            break
                         
-                    current_screenshot = cv2.imread('tmp/screen.png')
-                    if current_screenshot is None:
-                        break
-                    
-                    accept_locations = self.find_accept_buttons()
-                    if not accept_locations:
-                        break
-                    
-                    topmost_accept = accept_locations[0]
-                    alliance_region, name_region, screenshot = get_text_regions(
-                        topmost_accept, 
-                        self.device_id,
-                        existing_screenshot=current_screenshot
-                    )
-                    
-                    if screenshot is None:
-                        continue
+                        accept_locations = self.find_accept_buttons()
+                        if not accept_locations:
+                            break
+                        
+                        topmost_accept = accept_locations[0]
+                        alliance_region, name_region, screenshot = get_text_regions(
+                            topmost_accept, 
+                            self.device_id,
+                            existing_screenshot=current_screenshot
+                        )
+                        
+                        if screenshot is None:
+                            continue
 
-                    alliance_text, original_text = extract_text_from_region(
-                        self.device_id, 
-                        alliance_region, 
-                        languages='eng', 
-                        img=screenshot
-                    )
-                    app_logger.info(f"##### accept alliance:{alliance_text},{original_text}")
-                    
-                    if len(CONTROL_LIST['whitelist']['alliance']) > 0:
-                        if alliance_text in CONTROL_LIST['whitelist']['alliance']:
-                            humanized_tap(self.device_id, topmost_accept[0], topmost_accept[1])
-                            app_logger.debug(f"Tapping accept at coordinates: ({topmost_accept[0]}, {topmost_accept[1]})")
-                            app_logger.info(f"Accepted candidate with alliance: {alliance_text} for {name}")
-                            accepted += 1
-                        else:
-                            # Handle rejection
-                            app_logger.info(f"Rejecting candidate with alliance: {alliance_text} for {name}")
-                            log_rejected_alliance(alliance_text, original_text)
-                            
-                            if self.manual_deny:
-                                play_beep()
-                                input('Press Enter to continue...')
-                            
-                            # Try reject button first
-                            reject_buttons = self.find_reject_buttons()
-                            if reject_buttons:
-                                # Get topmost reject button
-                                reject_button = reject_buttons[0]
-                                # Verify it's aligned with our accept button vertically
-                                if abs(reject_button[1] - topmost_accept[1]) <= 10:  # 10 pixel tolerance
-                                    humanized_tap(self.device_id, reject_button[0], reject_button[1])
-                                    app_logger.debug(f"Tapping reject at coordinates: ({reject_button[0]}, {reject_button[1]})")
+                        alliance_text, original_text = extract_text_from_region(
+                            self.device_id, 
+                            alliance_region, 
+                            languages='eng', 
+                            img=screenshot
+                        )
+                        app_logger.info(f"##### {name} accept alliance:{alliance_text},{original_text}")
+                        
+                        if len(CONTROL_LIST['whitelist']['alliance']) > 0:
+                            if alliance_text in CONTROL_LIST['whitelist']['alliance']:
+                                humanized_tap(self.device_id, topmost_accept[0], topmost_accept[1])
+                                app_logger.debug(f"Tapping accept at coordinates: ({topmost_accept[0]}, {topmost_accept[1]})")
+                                app_logger.info(f"Accepted candidate with alliance: {alliance_text} for {name}")
+                                accepted += 1
+                            else:
+                                # Handle rejection
+                                app_logger.info(f"Rejecting candidate with alliance: {alliance_text} for {name}")
+                                log_rejected_alliance(alliance_text, original_text)
+                                
+                                if self.manual_deny:
+                                    play_beep()
+                                    input('Press Enter to continue...')
+                                
+                                # Try reject button first
+                                reject_buttons = self.find_reject_buttons()
+                                if reject_buttons:
+                                    # Get topmost reject button
+                                    reject_button = reject_buttons[0]
+                                    # Verify it's aligned with our accept button vertically
+                                    if abs(reject_button[1] - topmost_accept[1]) <= 10:  # 10 pixel tolerance
+                                        humanized_tap(self.device_id, reject_button[0], reject_button[1])
+                                        app_logger.debug(f"Tapping reject at coordinates: ({reject_button[0]}, {reject_button[1]})")
+                                        if not find_and_tap_template(
+                                            self.device_id,
+                                            "confirm",
+                                            error_msg="Failed to find confirm button",
+                                            critical=True
+                                        ):
+                                            continue
+                                else:
+                                    # No reject buttons found, try confirm
                                     if not find_and_tap_template(
                                         self.device_id,
                                         "confirm",
@@ -244,30 +252,21 @@ class SecretaryRoutine(TimeCheckRoutine):
                                         critical=True
                                     ):
                                         continue
-                            else:
-                                # No reject buttons found, try confirm
-                                if not find_and_tap_template(
-                                    self.device_id,
-                                    "confirm",
-                                    error_msg="Failed to find confirm button",
-                                    critical=True
-                                ):
-                                    continue
-                    else:
-                        # No whitelist - accept all
-                        for location in accept_locations:
-                            humanized_tap(self.device_id, location[0], location[1])            
-                            break
-                        # if not find_and_tap_template(
-                        #     self.device_id,
-                        #     "accept",
-                        #     error_msg=f"Failed to accept candidate for {name}",
-                        #     success_msg=f"Accepting candidate for {name}"
-                        # ):
-                        #     continue
-                    
-                    processed += 1
-                    human_delay(CONFIG['timings']['settle_time'])
+                        else:
+                            # No whitelist - accept all
+                            for location in accept_locations:
+                                humanized_tap(self.device_id, location[0], location[1])            
+                                break
+                            # if not find_and_tap_template(
+                            #     self.device_id,
+                            #     "accept",
+                            #     error_msg=f"Failed to accept candidate for {name}",
+                            #     success_msg=f"Accepting candidate for {name}"
+                            # ):
+                            #     continue
+                        
+                        processed += 1
+                        human_delay(CONFIG['timings']['settle_time'])
                                 
             # Exit menus with verification
             if not self.exit_to_secretary_menu():
@@ -289,8 +288,10 @@ class SecretaryRoutine(TimeCheckRoutine):
             positions_to_process = []
             
             # Find all secretary positions
+            
+            random_list = random.sample(self.secretary_types, len(self.secretary_types))
             all_positions = {}
-            for position_type in self.secretary_types:
+            for position_type in random_list:
                 positions = find_all_templates(
                     self.device_id,
                     position_type
@@ -298,34 +299,34 @@ class SecretaryRoutine(TimeCheckRoutine):
                 if positions:
                     all_positions[position_type] = positions[0]  # Take first match for each type
                     app_logger.debug(f"Found {position_type} position at ({positions[0][0]}, {positions[0][1]})")
+                    positions_to_process.append(position_type)
             # Find all applicant icons
-            applicant_locations = find_all_templates(
-                self.device_id,
-                "has_applicant"
-            )
+            # applicant_locations = find_all_templates(
+            #     self.device_id,
+            #     "has_applicant"
+            # )
             
-            if not applicant_locations:
-                app_logger.debug("No applicant icons found")
-                return []
+            # if not applicant_locations:
+            #     app_logger.debug("No applicant icons found")
+            #     return []
             
-            app_logger.debug(f"Found {len(applicant_locations)} applicant icons:")
-            for i, (x, y) in enumerate(applicant_locations):
-                app_logger.debug(f"  Applicant {i+1}: ({x}, {y})")
+            # app_logger.debug(f"Found {len(applicant_locations)} applicant icons:")
+            # for i, (x, y) in enumerate(applicant_locations):
+            #     app_logger.debug(f"  Applicant {i+1}: ({x}, {y})")
             
             # For each position, check if there's an applicant icon nearby
-            for position_type, pos_loc in all_positions.items():
-                pos_x, pos_y = pos_loc
+            # for position_type, pos_loc in all_positions.items():
+            #     pos_x, pos_y = pos_loc
                 
-                # Check each applicant icon
-                for app_x, app_y in applicant_locations:
-                    x_diff = app_x - pos_x
-                    y_diff = app_y - pos_y
-                    # Check if applicant icon is within 100 pixels horizontally and 25 pixels vertically
-                    if abs(x_diff) <= 100 and abs(y_diff) <= 28:
-                        positions_to_process.append(position_type)
-                        app_logger.info(f"Found applicant for {position_type} position")
-                        break
-            
+            #     # Check each applicant icon
+            #     for app_x, app_y in applicant_locations:
+            #         x_diff = app_x - pos_x
+            #         y_diff = app_y - pos_y
+            #         # Check if applicant icon is within 100 pixels horizontally and 25 pixels vertically
+            #         if abs(x_diff) <= 100 and abs(y_diff) <= 28:
+            #             positions_to_process.append(position_type)
+            #             app_logger.info(f"Found applicant for {position_type} position")
+            #             break
             return positions_to_process
             
         except Exception as e:
