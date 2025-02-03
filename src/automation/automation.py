@@ -236,6 +236,12 @@ class MainAutomation:
                 app_logger.info(f"Running {task_name} ({task_type})")
                 success = handler.start()
                 
+                if not success:
+                    app_logger.error(f"Task {task_name} failed, attempting game reset")
+                    if self.reset_game():
+                        # Retry the task after reset
+                        success = handler.start()
+                
                 if success:
                     handler.after_run()
                     if task_type == 'time_checks':
@@ -279,7 +285,7 @@ class MainAutomation:
                     webhook_url = os.getenv('AUTOMATION_WEBHOOK_URL')
                     if webhook_url:  # Only attempt notification if webhook is configured
                         try:
-                            from src.core.discord import DiscordNotifier
+                            from src.core.discord_bot import DiscordNotifier
                             discord = DiscordNotifier()
                             discord.webhook_url = webhook_url
                             asyncio.run(discord.send_notification(

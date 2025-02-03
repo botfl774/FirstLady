@@ -11,23 +11,55 @@ import telnetlib
 def get_device_list() -> List[str]:
     """Get list of connected devices"""
     try:
-        cmd = "adb devices"
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            # Parse output and get device IDs
-            lines = result.stdout.strip().split('\n')[1:]  # Skip first line
-            devices = []
-            for line in lines:
-                if line.strip():
-                    device_id = line.split()[0]
-                    devices.append(device_id)
-            return devices
-        else:
-            app_logger.error(f"Error getting device list: {result.stderr}")
-            return []
+        # Try to run ADB directly first
+        cmd = ["adb", "devices"]
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+                shell=True  # Required for Windows compatibility
+            )
+        except FileNotFoundError:
+            app_logger.error("ADB not found in PATH. Checking common Android SDK locations...")
+            # Common SDK locations
+            sdk_locations = [
+                os.path.expanduser("~/AppData/Local/Android/Sdk/platform-tools/adb.exe"),
+                "C:/Program Files/Android/platform-tools/adb.exe",
+                os.path.expanduser("~/Android/Sdk/platform-tools/adb.exe")
+            ]
+            
+            for adb_path in sdk_locations:
+                if os.path.exists(adb_path):
+                    app_logger.info(f"Found ADB at: {adb_path}")
+                    cmd[0] = adb_path
+                    result = subprocess.run(
+                        cmd,
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                        shell=True
+                    )
+                    break
+            else:
+                app_logger.error("ADB not found in common locations. Please ensure Android SDK platform-tools is installed")
+                return []
+
+        # Parse output and get device IDs
+        lines = result.stdout.strip().split('\n')[1:]  # Skip first line
+        devices = []
+        for line in lines:
+            if line.strip():
+                device_id = line.split()[0]
+                devices.append(device_id)
+                app_logger.debug(f"Found device: {device_id}")
+        
+        return devices
             
     except Exception as e:
-        app_logger.error(f"Error getting device list: {e}")
+        app_logger.error(f"Error getting device list: {str(e)}")
+        app_logger.debug(f"Full error details: {traceback.format_exc()}")
         return []
 
 def launch_package(device_id: str, package_name: str):

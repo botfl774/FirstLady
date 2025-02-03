@@ -84,12 +84,6 @@
     "psm_mode": 8,
     "oem_mode": 3
   },
-  "network_sniffing": {
-    "enabled": true,
-    "endpoints": {
-      "secretary_list": "secretary/list"
-    }
-  },
   "control_list": {
     "whitelist": {
       "alliance": []
