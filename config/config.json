@@ -1,6 +1,6 @@
 {
   "package_name": "com.fun.lastwar.gp",
-  "sleep_multiplier": 1.0,
+  "sleep_multiplier": 1.8,
   "debug_mode": false,
   "max_retries": 3,
   "max_home_attempts": 500,
@@ -9,7 +9,7 @@
   "donate_alliance_interval": null,
   "screenshot_quality": 100,
   "match_threshold": 0.8,
-  "max_accept_count": 2,
+  "max_accept_count": 3,
   "thres_hold_minutes": 6,
   "ui_elements": {
     "profile": {
@@ -18,7 +18,7 @@
     },
     "secretary_menu": {
       "x": "70%",
-      "y": "65%"
+      "y": "67%"
     },
     "list": {
       "x": "50%",
@@ -48,19 +48,19 @@
     }
   },
   "timings": {
-    "tap_delay": 1,
-    "menu_animation": 1,
-    "list_animation": 1,
+    "tap_delay": 2,
+    "menu_animation": 2,
+    "list_animation": 2,
     "swipe_duration": {
       "min": 300,
       "max": 400
     },
     "list_timeout": 2.0,
-    "accept_timeout": 1.0,
+    "accept_timeout": 2.0,
     "scroll_delay": 0.3,
     "settle_time": 0.2,
     "home_check_interval": 3.0,
-    "launch_wait": 20.0,
+    "launch_wait": 30.0,
     "launch_max_wait": 120.0,
     "quit_check_timeout": 2.0,
     "error_delay": 5.0,
