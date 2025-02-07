@@ -23,7 +23,7 @@ class SecretaryRoutine(TimeCheckRoutine):
 
     def __init__(self, device_id: str, interval: int, last_run: float = None, automation=None):
         super().__init__(device_id, interval, last_run, automation)
-        self.secretary_types = ["strategy", "security", "development", "science", "interior", "administrative", "military"]
+        self.secretary_types = CONTROL_LIST['target_secretary']
         self.capture = None
         self.manual_deny = False
 
@@ -113,10 +113,16 @@ class SecretaryRoutine(TimeCheckRoutine):
             secretary = CONFIG['ui_elements']['secretary_menu']
 
             # Click secretary menu with randomization
-            secretary_x = int(width * float(secretary['x'].strip('%')) / 100)
-            secretary_y = int(height * float(secretary['y'].strip('%')) / 100)
-            humanized_tap(device_id, secretary_x, secretary_y)
-        
+            # secretary_x = int(width * float(secretary['x'].strip('%')) / 100)
+            # secretary_y = int(height * float(secretary['y'].strip('%')) / 100)
+            # humanized_tap(device_id, secretary_x, secretary_y)
+            if find_and_tap_template(
+                self.device_id,
+                "capitol",
+                error_msg=f"Could not find capitol position",
+                critical=True
+            ):
+                return True  # Continue with next position
             return True
         except Exception as e:
             app_logger.error(f"Error opening secretary menu: {e}")

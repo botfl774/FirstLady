@@ -85,6 +85,13 @@
     "oem_mode": 3
   },
   "control_list": {
+    "target_secretary": [
+      "strategy",
+      "security",
+      "development",
+      "science",
+      "interior"
+    ],
     "whitelist": {
       "alliance": []
     },
@@ -156,6 +163,10 @@
     "clock": {
       "path": "templates/jp/secretary/clock.png",
       "threshold": 0.65
+    },
+    "capitol": {
+      "path": "templates/jp/secretary/capitol.png",
+      "threshold": 0.75
     },
     "military": {
       "path": "templates/jp/secretary/military.png",
