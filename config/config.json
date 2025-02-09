@@ -95,15 +95,13 @@
     ],
     "whitelist": {
       "alliance": [
-        "templates/jp/secretary/whitelist/BreK.png",
-        "templates/jp/secretary/whitelist/hgS.png",
-        "templates/jp/secretary/whitelist/Hmal.png",
         "templates/jp/secretary/whitelist/LDk.png",
-        "templates/jp/secretary/whitelist/PaC.png",
         "templates/jp/secretary/whitelist/qzw.png",
-        "templates/jp/secretary/whitelist/TNo.png",
-        "templates/jp/secretary/whitelist/ues.png"
-      ]
+        "templates/jp/secretary/whitelist/hgS.png",
+        "templates/jp/secretary/whitelist/BreK.png",
+        "templates/jp/secretary/whitelist/TNo.png"
+      ],
+      "threshold": 0.8
     },
     "blacklist": {
       "alliance": []

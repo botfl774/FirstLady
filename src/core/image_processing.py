@@ -111,6 +111,10 @@ def find_all_templates(
             
         h, w = template.shape[:2]
         
+        # if template_name == "accept":
+        #     img = cv2.imread('2.png')
+        # else:
+        #     img = _take_and_load_screenshot(device_id)
         img = _take_and_load_screenshot(device_id)
         if img is None:
             return []
@@ -265,3 +269,49 @@ def find_and_tap_template(
         humanized_tap(device_id, location[0], location[1])
         
     return True
+
+def find_match_image(
+    template_file_name: str,
+    img,
+    search_region: Tuple[int, int, int, int] = None
+) -> list[Tuple[int, int]]:
+    """Find all template matches in image and return center coordinates"""
+    try:
+        template = cv2.imread(f"config/{template_file_name}")
+        h, w = template.shape[:2]
+        result = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
+        threshold = 0.8
+        matches = []
+        result_copy = result.copy()
+        while True:
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result_copy)
+            if max_val < threshold:
+                break
+                
+            # Store match with confidence
+            center_x = max_loc[0] + w//2
+            center_y = max_loc[1] + h//2
+            matches.append((center_x, center_y, max_val))
+            
+            # Suppress region
+            x1_sup = max(0, max_loc[0] - w//2)
+            y1_sup = max(0, max_loc[1] - h//2)
+            x2_sup = min(result_copy.shape[1], max_loc[0] + w//2)
+            y2_sup = min(result_copy.shape[0], max_loc[1] + h//2)
+            result_copy[y1_sup:y2_sup, x1_sup:x2_sup] = 0
+        
+        # Adjust coordinates if search region was used
+        adjusted_matches = []
+        for x, y, conf in matches:
+            adjusted_matches.append((x, y))
+            
+        # Save debug image
+        _save_debug_image(img, template_file_name, matches, search_region, (w, h))
+        
+        app_logger.debug(f"Found {len(matches)} matches for {template_file_name} with threshold {threshold}")
+        return adjusted_matches
+        
+    except Exception as e:
+        app_logger.error(f"Error finding templates: {e}")
+        return []
+    

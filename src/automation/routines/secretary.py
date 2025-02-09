@@ -14,6 +14,8 @@ from src.core.text_detection import (
     log_rejected_alliance,
     CONTROL_LIST
 )
+from src.core.image_processing import find_match_image
+
 from src.core.audio import play_beep
 import numpy as np
 import random
@@ -201,21 +203,48 @@ class SecretaryRoutine(TimeCheckRoutine):
                         if not accept_locations:
                             break
                         
-                        topmost_accept = accept_locations[0]
-                        alliance_region, name_region, screenshot = get_text_regions(
-                            topmost_accept, 
-                            self.device_id,
-                            existing_screenshot=current_screenshot
-                        )
-                        
-                        if screenshot is None:
-                            continue
-
+                        #topmost_accept = accept_locations[0]
+                        # alliance_region, name_region, screenshot = get_text_regions(
+                        #     topmost_accept, 
+                        #     self.device_id,
+                        #     existing_screenshot=current_screenshot
+                        # )
+                        # if screenshot is None:
+                        #     continue
+                        # if name == "firstlady":
+                        #     current_screenshot = cv2.imread('2.png')
                         for location in accept_locations:
-                            humanized_tap(self.device_id, location[0], location[1])
                             if name == "firstlady":
-                                firstleady_accept_flg = True
-                            break
+                                adjusted_matches = []
+                                alliance_list = CONTROL_LIST["whitelist"]["alliance"]
+                                for alliance in alliance_list:
+                                    matches = find_match_image(
+                                        alliance,
+                                        current_screenshot)
+                                    if matches:
+                                        for x,y in matches:
+                                            adjusted_matches.append((x, y))
+                                # Sort by Y coordinate (ascending) and X coordinate (ascending) for same Y
+                                sorted_matches = sorted(adjusted_matches, key=lambda x: (x[1], x[0]))
+                                if sorted_matches:
+                                    app_logger.debug(f"Found {len(sorted_matches)} accept buttons")
+                                    app_logger.debug(f"Topmost button at coordinates: ({sorted_matches[0][0]}, {sorted_matches[0][1]})")
+                                    for x, y in sorted_matches:
+                                        for location in accept_locations:
+                                            x_diff = x - location[0]
+                                            y_diff = y - location[1]
+                                            if abs(y_diff) <= 10:
+                                                humanized_tap(self.device_id, location[0], location[1])
+                                                firstleady_accept_flg = True
+                                                break
+                                        if firstleady_accept_flg == True:
+                                            break
+                                    else:
+                                        humanized_tap(self.device_id, location[0], location[1])
+                                    break
+                            else:
+                                humanized_tap(self.device_id, location[0], location[1])            
+                                break
                         processed += 1
                         human_delay(CONFIG['timings']['settle_time'])
                                 
@@ -236,7 +265,7 @@ class SecretaryRoutine(TimeCheckRoutine):
                 find_and_tap_template(
                     self.device_id,
                     "secretary_application",
-                    error_msg=f"Could not find capitol position",
+                    error_msg=f"Could not find secretary_application position",
                     critical=True
                 )
                 if not self.exit_to_secretary_menu():
@@ -313,13 +342,4 @@ class SecretaryRoutine(TimeCheckRoutine):
         for name in positions_to_process:
             if not self.process_secretary_position(name):
                 return False
-            # 副大統領を承認した場合は、副大統領に申請
-            if name == "firstlady":
-                if find_and_tap_template(
-                    self.device_id,
-                    "secretary_application",
-                    error_msg=f"Could not find capitol position",
-                    critical=True
-                ):
-                    return True  # Continue with next position
         return True
