@@ -157,6 +157,7 @@ class SecretaryRoutine(TimeCheckRoutine):
     def process_secretary_position(self, name: str) -> bool:
         """Process a single secretary position"""
         try:
+            firstleady_accept_flg = False
             # Find and click secretary position
             if not find_and_tap_template(
                 self.device_id,
@@ -188,7 +189,7 @@ class SecretaryRoutine(TimeCheckRoutine):
                     accepted = 0
 
                     max_accept_count = CONFIG["max_accept_count"]
-                    while processed < max_accept_count:  # Max 8 applicants
+                    while processed < max_accept_count:
                         if not take_screenshot(self.device_id):
                             break
                             
@@ -210,67 +211,11 @@ class SecretaryRoutine(TimeCheckRoutine):
                         if screenshot is None:
                             continue
 
-                        alliance_text, original_text = extract_text_from_region(
-                            self.device_id, 
-                            alliance_region, 
-                            languages='eng', 
-                            img=screenshot
-                        )
-                        app_logger.info(f"##### {name} accept alliance:{alliance_text},{original_text}")
-                        
-                        if len(CONTROL_LIST['whitelist']['alliance']) > 0:
-                            if alliance_text in CONTROL_LIST['whitelist']['alliance']:
-                                humanized_tap(self.device_id, topmost_accept[0], topmost_accept[1])
-                                app_logger.debug(f"Tapping accept at coordinates: ({topmost_accept[0]}, {topmost_accept[1]})")
-                                app_logger.info(f"Accepted candidate with alliance: {alliance_text} for {name}")
-                                accepted += 1
-                            else:
-                                # Handle rejection
-                                app_logger.info(f"Rejecting candidate with alliance: {alliance_text} for {name}")
-                                log_rejected_alliance(alliance_text, original_text)
-                                
-                                if self.manual_deny:
-                                    play_beep()
-                                    input('Press Enter to continue...')
-                                
-                                # Try reject button first
-                                reject_buttons = self.find_reject_buttons()
-                                if reject_buttons:
-                                    # Get topmost reject button
-                                    reject_button = reject_buttons[0]
-                                    # Verify it's aligned with our accept button vertically
-                                    if abs(reject_button[1] - topmost_accept[1]) <= 10:  # 10 pixel tolerance
-                                        humanized_tap(self.device_id, reject_button[0], reject_button[1])
-                                        app_logger.debug(f"Tapping reject at coordinates: ({reject_button[0]}, {reject_button[1]})")
-                                        if not find_and_tap_template(
-                                            self.device_id,
-                                            "confirm",
-                                            error_msg="Failed to find confirm button",
-                                            critical=True
-                                        ):
-                                            continue
-                                else:
-                                    # No reject buttons found, try confirm
-                                    if not find_and_tap_template(
-                                        self.device_id,
-                                        "confirm",
-                                        error_msg="Failed to find confirm button",
-                                        critical=True
-                                    ):
-                                        continue
-                        else:
-                            # No whitelist - accept all
-                            for location in accept_locations:
-                                humanized_tap(self.device_id, location[0], location[1])            
-                                break
-                            # if not find_and_tap_template(
-                            #     self.device_id,
-                            #     "accept",
-                            #     error_msg=f"Failed to accept candidate for {name}",
-                            #     success_msg=f"Accepting candidate for {name}"
-                            # ):
-                            #     continue
-                        
+                        for location in accept_locations:
+                            humanized_tap(self.device_id, location[0], location[1])
+                            if name == "firstlady":
+                                firstleady_accept_flg = True
+                            break
                         processed += 1
                         human_delay(CONFIG['timings']['settle_time'])
                                 
@@ -278,7 +223,25 @@ class SecretaryRoutine(TimeCheckRoutine):
             if not self.exit_to_secretary_menu():
                 app_logger.error("Failed to exit to secretary menu")
                 return False
-            
+           
+            # 副大統領を承認した場合は、副大統領に申請
+            if name == "firstlady" and firstleady_accept_flg == True:
+                if not find_and_tap_template(
+                    self.device_id,
+                    name,
+                    error_msg=f"Could not find {name} secretary position",
+                    critical=True
+                ):
+                    return True  # Continue with next position
+                find_and_tap_template(
+                    self.device_id,
+                    "secretary_application",
+                    error_msg=f"Could not find capitol position",
+                    critical=True
+                )
+                if not self.exit_to_secretary_menu():
+                    app_logger.error("Failed to exit to secretary menu")
+                    return False
             return True
             
         except Exception as e:
@@ -350,4 +313,13 @@ class SecretaryRoutine(TimeCheckRoutine):
         for name in positions_to_process:
             if not self.process_secretary_position(name):
                 return False
+            # 副大統領を承認した場合は、副大統領に申請
+            if name == "firstlady":
+                if find_and_tap_template(
+                    self.device_id,
+                    "secretary_application",
+                    error_msg=f"Could not find capitol position",
+                    critical=True
+                ):
+                    return True  # Continue with next position
         return True
