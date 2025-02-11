@@ -254,23 +254,23 @@ class SecretaryRoutine(TimeCheckRoutine):
                 return False
            
             # 副大統領を承認した場合は、副大統領に申請
-            if name == "firstlady" and firstleady_accept_flg == True:
-                if not find_and_tap_template(
-                    self.device_id,
-                    name,
-                    error_msg=f"Could not find {name} secretary position",
-                    critical=True
-                ):
-                    return True  # Continue with next position
-                find_and_tap_template(
-                    self.device_id,
-                    "secretary_application",
-                    error_msg=f"Could not find secretary_application position",
-                    critical=True
-                )
-                if not self.exit_to_secretary_menu():
-                    app_logger.error("Failed to exit to secretary menu")
-                    return False
+            # if name == "firstlady" and firstleady_accept_flg == True:
+            #     if not find_and_tap_template(
+            #         self.device_id,
+            #         name,
+            #         error_msg=f"Could not find {name} secretary position",
+            #         critical=True
+            #     ):
+            #         return True  # Continue with next position
+            #     find_and_tap_template(
+            #         self.device_id,
+            #         "secretary_application",
+            #         error_msg=f"Could not find secretary_application position",
+            #         critical=True
+            #     )
+            #     if not self.exit_to_secretary_menu():
+            #         app_logger.error("Failed to exit to secretary menu")
+            #         return False
             return True
             
         except Exception as e:
