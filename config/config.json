@@ -1,6 +1,6 @@
 {
   "package_name": "com.fun.lastwar.gp",
-  "sleep_multiplier": 1.8,
+  "sleep_multiplier": 1.5,
   "debug_mode": false,
   "max_retries": 3,
   "max_home_attempts": 500,

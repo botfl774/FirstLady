@@ -227,13 +227,15 @@ class SecretaryRoutine(TimeCheckRoutine):
                                 # Sort by Y coordinate (ascending) and X coordinate (ascending) for same Y
                                 sorted_matches = sorted(adjusted_matches, key=lambda x: (x[1], x[0]))
                                 if sorted_matches:
-                                    app_logger.debug(f"Found {len(sorted_matches)} accept buttons")
-                                    app_logger.debug(f"Topmost button at coordinates: ({sorted_matches[0][0]}, {sorted_matches[0][1]})")
+                                    app_logger.info(f"Found {len(sorted_matches)} accept buttons")
+                                    app_logger.info(f"button at coordinates: ({sorted_matches[0][0]}, {sorted_matches[0][1]})")
                                     for x, y in sorted_matches:
                                         for location in accept_locations:
                                             x_diff = x - location[0]
                                             y_diff = y - location[1]
+                                            app_logger.info(f"y_diff:{abs(y_diff)}")
                                             if abs(y_diff) <= 10:
+                                                app_logger.info(f"location:{location[0]},{location[1]}")
                                                 humanized_tap(self.device_id, location[0], location[1])
                                                 firstleady_accept_flg = True
                                                 break
